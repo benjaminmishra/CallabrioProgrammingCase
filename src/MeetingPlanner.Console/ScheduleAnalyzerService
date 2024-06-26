@@ -3,25 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace MeetingPlanner.Console;
 
-public class ScheduleService
+public class ScheduleAnalyzerService
 {
-    public ScheduleResult GetScheduleFromJson(string json)
+    private readonly ILogger<ScheduleAnalyzerService> _logger;
+
+    public ScheduleAnalyzerService(ILogger<ScheduleAnalyzerService> logger)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter(), new DateTimeConverter() }
-        };
-
-        var root = JsonSerializer.Deserialize<Root>(json, options) ?? throw new JsonException("Failed to convert");
-
-        return root.ScheduleResult;
+        _logger = logger;
     }
 
-    public List<TimeSlot> FindSuitableTimeSlots(ScheduleResult scheduleResult, int requiredTeamMembers)
+    public IReadOnlyCollection<TimeSlot> FindSuitableTimeSlots(ScheduleResult scheduleResult, int requiredTeamMembers)
     {
         var suitableTimeSlots = new List<TimeSlot>();
 
@@ -39,17 +34,11 @@ public class ScheduleService
 
                 if (availableExperts >= requiredTeamMembers)
                 {
-                    suitableTimeSlots.Add(new TimeSlot { Start = start, End = end });
+                    suitableTimeSlots.Add(new TimeSlot(start, end));
                 }
             }
         }
 
         return suitableTimeSlots;
     }
-}
-
-public class TimeSlot
-{
-    public DateTime Start { get; set; }
-    public DateTime End { get; set; }
 }
