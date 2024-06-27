@@ -15,6 +15,7 @@ await host.RunAsync();
 
 var app = host.Services.GetRequiredService<App>();
 var cancellationTokenSource = new CancellationTokenSource();
+
 Console.CancelKeyPress += (_, _) =>
 {
     cancellationTokenSource.Cancel();
