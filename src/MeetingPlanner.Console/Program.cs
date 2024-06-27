@@ -1,10 +1,11 @@
 ﻿using MeetingPlanner.Console;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.Net.Http;
 
 var host = Host.CreateDefaultBuilder(args)
-.ConfigureServices(services => {
+.ConfigureServices(services =>
+{
+    services.AddSingleton<App>();
     services.AddHttpClient();
     services.AddSingleton<ExpertsScheduleReader>();
     services.AddSingleton<ScheduleAnalyzerService>();
@@ -12,14 +13,15 @@ var host = Host.CreateDefaultBuilder(args)
 
 await host.RunAsync();
 
-
-var json = await GetJsonFromUrl(url);
-var scheduleResult = scheduleService.GetScheduleFromJson(json);
-
-var suitableTimeSlots = scheduleService.FindSuitableTimeSlots(scheduleResult, requiredTeamMembers);
-
-Console.WriteLine($"Suitable time slots for {requiredTeamMembers} team members:");
-foreach (var slot in suitableTimeSlots)
+var app = host.Services.GetRequiredService<App>();
+var cancellationTokenSource = new CancellationTokenSource();
+Console.CancelKeyPress += (_, _) =>
 {
-    Console.WriteLine($"{slot.Start:HH:mm} - {slot.End:HH:mm}");
+    cancellationTokenSource.Cancel();
+};
+
+
+while (!cancellationTokenSource.IsCancellationRequested)
+{
+    await app.RunAsync(cancellationTokenSource.Token);
 }

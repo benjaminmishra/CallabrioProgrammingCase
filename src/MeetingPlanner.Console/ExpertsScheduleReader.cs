@@ -1,19 +1,23 @@
-﻿using System.Text.Json;
+﻿using Microsoft.Extensions.Configuration;
+using System.Data;
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Configuration;
 
 namespace MeetingPlanner.Console;
 
 public class ExpertsScheduleReader
 {
     private readonly string _scheduleUrl;
+    private readonly HttpClient _httpClient;
 
-    public ExpertsScheduleReader(IConfiguration configuration)
+    public ExpertsScheduleReader(IConfiguration configuration, HttpClient httpClient)
     {
         _scheduleUrl = configuration["ScheduleUrl"] ?? throw new InvalidDataException("Schedule not found");
+        _httpClient = httpClient;
     }
 
-    public ScheduleResult Read(string json)
+    public async Task<ScheduleResult> ReadAsync(CancellationToken cancellationToken)
     {
         var options = new JsonSerializerOptions
         {
@@ -21,14 +25,12 @@ public class ExpertsScheduleReader
             Converters = { new JsonStringEnumConverter(), new DateTimeConverter() }
         };
 
-        var root = JsonSerializer.Deserialize<Root>(json, options) ?? throw new JsonException("Failed to convert");
+        var root = await _httpClient.GetFromJsonAsync<Root>(_scheduleUrl, options, cancellationToken);
+
+        if (root is null)
+            throw new DataException("Failed to read schedule");
+
 
         return root.ScheduleResult;
-    }
-
-    static async Task<string> GetScheduleJsonFromUrl(string url)
-    {
-        using var client = new HttpClient();
-        return await client.GetStringAsync(url);
     }
 }
