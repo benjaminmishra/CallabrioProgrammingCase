@@ -15,20 +15,20 @@ public class DateTimeConverter : JsonConverter<DateTime>
 
         var dateString = reader.GetString();
 
-        var match = DateRegex.Match(dateString);
-        if (match.Success)
-        {
-            long milliseconds = long.Parse(match.Groups[1].Value);
-            return DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).DateTime;
-        }
+        if (dateString is null)
+            throw new JsonException("Date is null");
 
-        throw new JsonException("Invalid date format");
+        var match = DateRegex.Match(dateString);
+        if (!match.Success)
+            throw new JsonException("Invalid date format");
+
+        var milliseconds = long.Parse(match.Groups[1].Value);
+        return DateTimeOffset.FromUnixTimeMilliseconds(milliseconds).DateTime;
     }
 
+    // We will never write back to the url , if we do something is wrong, hence exception
     public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
     {
-        long milliseconds = new DateTimeOffset(value).ToUnixTimeMilliseconds();
-        string dateString = $"/Date({milliseconds}+0000)/";
-        writer.WriteStringValue(dateString);
+        throw new NotImplementedException();
     }
 }

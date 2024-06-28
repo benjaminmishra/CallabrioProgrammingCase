@@ -1,3 +1,3 @@
 ﻿namespace MeetingPlanner.Console;
 
-public class TimeSlot(DateTime StartTime, DateTime EndTime);
+public record TimeSlot(DateTime StartTime, DateTime EndTime);

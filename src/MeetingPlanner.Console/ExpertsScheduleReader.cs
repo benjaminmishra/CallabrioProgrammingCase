@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Options;
 using System.Data;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -11,9 +11,9 @@ public class ExpertsScheduleReader
     private readonly string _scheduleUrl;
     private readonly HttpClient _httpClient;
 
-    public ExpertsScheduleReader(IConfiguration configuration, HttpClient httpClient)
+    public ExpertsScheduleReader(IOptions<MeetingSchedulerOptions> options, HttpClient httpClient)
     {
-        _scheduleUrl = configuration["ScheduleUrl"] ?? throw new InvalidDataException("Schedule not found");
+        _scheduleUrl = options.Value.ScheduleUrl;
         _httpClient = httpClient;
     }
 
@@ -28,8 +28,7 @@ public class ExpertsScheduleReader
         var root = await _httpClient.GetFromJsonAsync<Root>(_scheduleUrl, options, cancellationToken);
 
         if (root is null)
-            throw new DataException("Failed to read schedule");
-
+            throw new DataException("Failed to get schedule");
 
         return root.ScheduleResult;
     }
