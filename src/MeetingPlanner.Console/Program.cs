@@ -18,21 +18,24 @@ hostApplicationBuilder.Services.AddSingleton<ExpertsScheduleReader>();
 hostApplicationBuilder.Services.AddSingleton<ScheduleAnalyzerService>();
 
 var host = hostApplicationBuilder.Build();
+await host.StartAsync();
 
 var app = host.Services.GetRequiredService<App>();
 var cancellationTokenSource = new CancellationTokenSource();
 
 Console.CancelKeyPress += (_, _) =>
 {
+    Console.WriteLine("============== Shutting down ===============");
     cancellationTokenSource.Cancel();
+    host.StopAsync();
+    Environment.Exit(0);
 };
 
 
 Console.WriteLine("============= Meeting Scheduler Start =================");
+Console.WriteLine("Press Ctrl + C to exit.");
 
 while (!cancellationTokenSource.IsCancellationRequested)
 {
     await app.RunAsync(cancellationTokenSource.Token);
 }
-
-Console.WriteLine("============= Scheduler Shut down ===============");
