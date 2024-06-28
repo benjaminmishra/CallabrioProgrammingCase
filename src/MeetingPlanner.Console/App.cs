@@ -75,6 +75,7 @@ public class App
         System.Console.WriteLine("Analyzing schedule ...");
 
         // execute as task to keep main thread responsive
+        // hardcoding to 15 min time slots as per requirement
         var suitableTimeSlots = await Task.Run(
             () => _analyzerService.FindMeetingTimeslots(
                 startDate.Date,

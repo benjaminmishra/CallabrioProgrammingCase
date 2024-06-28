@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using MeetingPlanner.Console.Models;
+using Microsoft.Extensions.Options;
 
 namespace MeetingPlanner.Console;
 
@@ -18,8 +19,29 @@ public class ScheduleAnalyzerService
         int minParticipants,
         List<Schedule> schedules)
     {
+        // validations
+        if (startDate == DateTime.MinValue)
+            throw new ArgumentException("Start Date cannot be minimum value", nameof(startDate));
+
+        if (endDate == DateTime.MinValue)
+            throw new ArgumentException("End Date cannot be minimum value", nameof(endDate));
+
+        if (schedules.Count == 0)
+            return [];
+
+        if (meetingDurationMinutes < 1)
+            throw new ArgumentException("Meeting duration cannot be less than 1 minute", nameof(meetingDurationMinutes));
+
+        if (minParticipants < 1)
+            throw new ArgumentException("Meeting participants cannot be less than 1 minute", nameof(minParticipants));
+
         var suitableTimeSlots = new List<TimeSlot>();
+
         var meetingDuration = TimeSpan.FromMinutes(meetingDurationMinutes);
+
+        // if min number of required participants greater than the schedule cout i.e. number of experts
+        if (minParticipants > schedules.Count)
+            return [];
 
         // As long as the schedule falls on either or in between either of the dates user has passed we can include it
         // Don't consider time here as the user is allowed to enter only dates
@@ -29,7 +51,7 @@ public class ScheduleAnalyzerService
 
         // if schedules do not fall in the date range passed, return empty
         if (schedules.Count == 0)
-            return suitableTimeSlots;
+            return [];
 
         var scheduleStartDateTime = schedules.Min(x => x.Date);
         var scheduleEndDateTime = schedules.Max(x => x.Date);
@@ -75,7 +97,7 @@ public class ScheduleAnalyzerService
                 suitableTimeSlots.Add(new TimeSlot(slotStart, slotEnd));
             }
 
-            slotStart = slotStart.AddMinutes(15);
+            slotStart = slotStart.AddMinutes(meetingDurationMinutes);
         }
 
         return suitableTimeSlots;

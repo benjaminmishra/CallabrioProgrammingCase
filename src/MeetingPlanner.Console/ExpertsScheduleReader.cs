@@ -19,6 +19,9 @@ public class ExpertsScheduleReader
 
     public async Task<ScheduleResult> ReadAsync(CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(_scheduleUrl))
+            throw new ArgumentException("Schedule url not set", nameof(_scheduleUrl));
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
